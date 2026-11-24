@@ -1,44 +1,50 @@
 package main
 
 import (
-	_ "embed"
-	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
 	"net/http"
-	"slices"
 	"strconv"
-	"strings"
 )
 
 func main() {
-	port := flag.String("port", "8081", "port d'écoute")
+	port := flag.String("port", "8080", "port d'écoute de GameDex")
 	flag.Parse()
+
+	if err := afficherJeux(); err != nil {
+		log.Fatalf("GameDex ne peut pas démarrer, la mini API ne répond pas correctement (%s) : %v", apiURL, err)
+	}
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /{$}", accueil)
 	mux.HandleFunc("GET /jeux", listeJeux)
-	mux.HandleFunc("GET /jeux/{id}", detailJeux)
+	mux.HandleFunc("GET /jeux/{id}", detailJeu)
 	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
-	fmt.Println("Serveur sur http://localhost:8080")
-	http.ListenAndServe(":8080", mux)
-
-	log.Printf("Mini API sur http://localhost%s/api/", *port)
+	log.Printf("GameDex sur http://localhost:%s", *port)
 	log.Fatal(http.ListenAndServe(":"+*port, mux))
 }
 
-func writeJSON(w http.ResponseWriter, status int, v any) {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.WriteHeader(status)
-	enc := json.NewEncoder(w)
-	enc.SetIndent("", "  ")
-	enc.Encode(v)
-}
+func afficherJeux() error {
+	games, err := FetchGames()
+	if err != nil {
+		return fmt.Errorf("récupération des jeux : %w", err)
+	}
+	tournaments, err := FetchTournaments()
+	if err != nil {
+		return fmt.Errorf("récupération des tournois : %w", err)
+	}
 
-func writeError(w http.ResponseWriter, status int, msg string) {
-	writeJSON(w, status, map[string]string{"error": msg})
+	byGame := make(map[int][]Tournament)
+	for _, t := range tournaments {
+		byGame[t.GameID] = append(byGame[t.GameID], t)
+	}
+
+	for _, g := range games {
+		fmt.Printf("%-25s (%d)  %d tournoi(s)\n", g.Name, g.Year, len(byGame[g.ID]))
+	}
+	return nil
 }
 
 func accueil(w http.ResponseWriter, _ *http.Request) {
@@ -52,55 +58,78 @@ func accueil(w http.ResponseWriter, _ *http.Request) {
 </head>
 <body>
   <h1>Bienvenue sur GameDex</h1>
+  <p>Choisis une route à tester :</p>
+  <ul class="menu">
+    <li>
+      <a href="/jeux">
+        <span class="titre">Liste des jeux</span>
+        <span class="route">GET /jeux</span>
+        <span class="code ok">200</span>
+      </a>
+    </li>
+    <li>
+      <a href="/jeux/1">
+        <span class="titre">Détail d'un jeu</span>
+        <span class="route">GET /jeux/1</span>
+        <span class="code ok">200</span>
+      </a>
+    </li>
+    <li>
+      <a href="/jeux/abc">
+        <span class="titre">Identifiant invalide</span>
+        <span class="route">GET /jeux/abc</span>
+        <span class="code erreur">400</span>
+      </a>
+    </li>
+    <li>
+      <a href="/jeux/999">
+        <span class="titre">Jeu introuvable</span>
+        <span class="route">GET /jeux/999</span>
+        <span class="code erreur">404</span>
+      </a>
+    </li>
+    <li>
+      <a href="/static/css/style.css">
+        <span class="titre">Fichier statique</span>
+        <span class="route">GET /static/css/style.css</span>
+        <span class="code ok">200</span>
+      </a>
+    </li>
+  </ul>
 </body>
 </html>`)
 }
 
-func listeJeux(w http.ResponseWriter, r *http.Request) {
-	q := strings.ToLower(r.URL.Query().Get("q"))
-	genre := r.URL.Query().Get("genre")
-	year := r.URL.Query().Get("year")
-
-	result := []Game{}
-	for _, g := range games {
-		if q != "" && !strings.Contains(strings.ToLower(g.Name), q) {
-			continue
-		}
-		if genre != "" && !slices.Contains(g.Genres, genre) {
-			continue
-		}
-		if year != "" && strconv.Itoa(g.Year) != year {
-			continue
-		}
-		result = append(result, g)
-	}
-	writeJSON(w, http.StatusOK, result)
-}
-
-func trouverJeux(w http.ResponseWriter, r *http.Request) (Game, bool) {
-	id, err := strconv.Atoi(r.PathValue("id"))
+func listeJeux(w http.ResponseWriter, _ *http.Request) {
+	games, err := FetchGames()
 	if err != nil {
-		writeError(w, http.StatusBadRequest, "l'identifiant doit être un nombre")
-		return Game{}, false
+		log.Printf("FetchGames : %v", err)
+		http.Error(w, "Service indisponible, réessayez plus tard.", http.StatusServiceUnavailable)
+		return
 	}
 	for _, g := range games {
-		if g.ID == id {
-			return g, true
-		}
+		fmt.Fprintf(w, "%d. %s (%d)\n", g.ID, g.Name, g.Year)
 	}
-	writeError(w, http.StatusNotFound, "jeu introuvable")
-	return Game{}, false
 }
 
-func detailJeux(w http.ResponseWriter, r *http.Request) {
+func detailJeu(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
 		http.Error(w, "l'identifiant doit être un nombre", http.StatusBadRequest)
 		return
 	}
-	if id < 1 || id > 12 {
-		http.Error(w, "jeu introuvable", http.StatusNotFound)
+
+	games, err := FetchGames()
+	if err != nil {
+		log.Printf("FetchGames : %v", err)
+		http.Error(w, "Service indisponible, réessayez plus tard.", http.StatusServiceUnavailable)
 		return
 	}
-	fmt.Fprintf(w, "Jeu numéro %d", id)
+	for _, g := range games {
+		if g.ID == id {
+			fmt.Fprintf(w, "%s (%d), studio %s\n", g.Name, g.Year, g.Studio)
+			return
+		}
+	}
+	http.Error(w, "jeu introuvable", http.StatusNotFound)
 }

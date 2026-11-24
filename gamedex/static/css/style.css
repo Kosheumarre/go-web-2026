@@ -117,3 +117,89 @@ li:hover {
   background: rgba(45, 226, 230, 0.12);
   border-left-color: var(--turquoise);
 }
+
+/* ---------- Menu de la page d'accueil : une carte cliquable par route ---------- */
+
+.menu li {
+  padding: 0;
+  background: none;
+  border-left: 0;
+  border-radius: 0;
+}
+
+.menu li:hover {
+  background: none;
+}
+
+.menu a {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas:
+    "titre code"
+    "route code";
+  align-items: center;
+  column-gap: 1rem;
+  padding: 0.85rem 1.1rem;
+  color: var(--creme);
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.06);
+  border-left: 5px solid var(--rose);
+  border-radius: 0 0.6rem 0.6rem 0;
+  transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.menu a:hover,
+.menu a:focus-visible {
+  color: var(--creme);
+  background: rgba(45, 226, 230, 0.14);
+  border-left-color: var(--turquoise);
+  transform: translateX(6px);
+}
+
+.menu a:focus-visible {
+  outline: 3px solid var(--jaune);
+  outline-offset: 2px;
+}
+
+.menu .titre {
+  grid-area: titre;
+  font-weight: 700;
+}
+
+.menu .route {
+  grid-area: route;
+  font-family: ui-monospace, "Cascadia Code", Menlo, Consolas, monospace;
+  font-size: 0.85rem;
+  color: var(--turquoise);
+  overflow-wrap: anywhere;
+}
+
+/* Pastille du code HTTP attendu */
+.menu .code {
+  grid-area: code;
+  padding: 0.2rem 0.65rem;
+  font-family: ui-monospace, "Cascadia Code", Menlo, Consolas, monospace;
+  font-size: 0.85rem;
+  font-weight: 700;
+  border-radius: 999px;
+}
+
+.menu .code.ok {
+  color: var(--nuit);
+  background: var(--turquoise);
+}
+
+.menu .code.erreur {
+  color: var(--nuit);
+  background: var(--orange);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu a {
+    transition: none;
+  }
+  .menu a:hover,
+  .menu a:focus-visible {
+    transform: none;
+  }
+}
