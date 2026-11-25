@@ -1,6 +1,3 @@
-/* GameDex : thème "coucher de soleil sur Vice City"
-   Ciel dégradé violet → rose → orange, contenu sur un panneau sombre. */
-
 :root {
   --nuit: #1a0b3b;
   --violet: #3b1478;
@@ -51,7 +48,6 @@ body {
     0 20px 60px rgba(0, 0, 0, 0.5);
 }
 
-/* Le titre : l'élément mémorable de la page */
 h1 {
   margin: 0 0 1.5rem;
   font-family: var(--police);
@@ -98,7 +94,6 @@ a:focus-visible {
   border-radius: 2px;
 }
 
-/* Liste de jeux (pour la page /jeux) */
 ul {
   margin: 0;
   padding: 0;
@@ -117,8 +112,6 @@ li:hover {
   background: rgba(45, 226, 230, 0.12);
   border-left-color: var(--turquoise);
 }
-
-/* ---------- Menu de la page d'accueil : une carte cliquable par route ---------- */
 
 .menu li {
   padding: 0;
@@ -174,7 +167,6 @@ li:hover {
   overflow-wrap: anywhere;
 }
 
-/* Pastille du code HTTP attendu */
 .menu .code {
   grid-area: code;
   padding: 0.2rem 0.65rem;
@@ -203,8 +195,6 @@ li:hover {
     transform: none;
   }
 }
-
-/* ---------- Pages communes (header.html / footer.html) ---------- */
 
 header {
   margin-bottom: 1.75rem;
@@ -238,8 +228,6 @@ footer {
 .retour {
   margin-top: 2rem;
 }
-
-/* ---------- Recherche ---------- */
 
 .recherche {
   display: flex;
@@ -289,8 +277,6 @@ footer {
   overflow-wrap: anywhere;
 }
 
-/* ---------- Liste des jeux ---------- */
-
 ul.jeux li {
   display: flex;
   justify-content: space-between;
@@ -310,8 +296,6 @@ ul.jeux a {
   background: var(--turquoise);
   border-radius: 999px;
 }
-
-/* ---------- Fiche d'un jeu ---------- */
 
 ul.genres {
   display: flex;
@@ -351,8 +335,6 @@ ul.tournois li {
     flex-direction: column;
   }
 }
-
-/* ---------- Navigation, introduction, bouton ---------- */
 
 header {
   display: flex;
