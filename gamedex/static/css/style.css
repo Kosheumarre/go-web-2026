@@ -22,7 +22,7 @@
 html {
   min-height: 100%;
   background:
-    radial-gradient(circle at 50% 62%, var(--jaune) 0 7rem, transparent 7.1rem),
+    radial-gradient(circle at 50% 100%, var(--jaune) 0 9rem, transparent 9.1rem),
     linear-gradient(
       180deg,
       var(--nuit) 0%,
@@ -41,7 +41,7 @@ body {
   font-size: 1.05rem;
   line-height: 1.65;
   color: var(--creme);
-  background: rgba(26, 11, 59, 0.88);
+  background: var(--nuit);
   border: 3px solid transparent;
   border-radius: 1.25rem;
   background-clip: padding-box;
@@ -202,4 +202,198 @@ li:hover {
   .menu a:focus-visible {
     transform: none;
   }
+}
+
+/* ---------- Pages communes (header.html / footer.html) ---------- */
+
+header {
+  margin-bottom: 1.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px dashed rgba(255, 244, 230, 0.25);
+}
+
+header .logo {
+  font-family: var(--police);
+  font-size: 1.1rem;
+  font-style: italic;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--jaune);
+}
+
+header .logo:hover {
+  color: var(--rose);
+}
+
+footer {
+  margin-top: 2.5rem;
+  padding-top: 0.75rem;
+  border-top: 2px dashed rgba(255, 244, 230, 0.25);
+  font-size: 0.85rem;
+  opacity: 0.75;
+}
+
+.retour {
+  margin-top: 2rem;
+}
+
+/* ---------- Recherche ---------- */
+
+.recherche {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.recherche input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.6rem 0.9rem;
+  font: inherit;
+  color: var(--creme);
+  background: rgba(255, 255, 255, 0.08);
+  border: 2px solid var(--rose);
+  border-radius: 0.5rem;
+}
+
+.recherche input::placeholder {
+  color: rgba(255, 244, 230, 0.55);
+}
+
+.recherche input:focus-visible,
+.recherche button:focus-visible {
+  outline: 3px solid var(--jaune);
+  outline-offset: 2px;
+}
+
+.recherche button {
+  padding: 0.6rem 1.1rem;
+  font: inherit;
+  font-weight: 700;
+  color: var(--nuit);
+  background: var(--rose);
+  border: 0;
+  border-radius: 0.5rem;
+  cursor: pointer;
+}
+
+.recherche button:hover {
+  background: var(--jaune);
+}
+
+.info {
+  color: var(--jaune);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- Liste des jeux ---------- */
+
+ul.jeux li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+ul.jeux a {
+  font-size: 1.05rem;
+}
+
+.annee {
+  padding: 0.1rem 0.6rem;
+  font-family: ui-monospace, "Cascadia Code", Menlo, Consolas, monospace;
+  font-size: 0.85rem;
+  color: var(--nuit);
+  background: var(--turquoise);
+  border-radius: 999px;
+}
+
+/* ---------- Fiche d'un jeu ---------- */
+
+ul.genres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+ul.genres li {
+  margin: 0;
+  padding: 0.15rem 0.8rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--nuit);
+  background: var(--rose);
+  border: 0;
+  border-radius: 999px;
+}
+
+ul.genres li:hover {
+  background: var(--jaune);
+  border: 0;
+}
+
+ul.tournois li {
+  display: flex;
+  flex-direction: column;
+}
+
+.lieu {
+  font-size: 0.9rem;
+  color: var(--turquoise);
+}
+
+@media (max-width: 30rem) {
+  .recherche {
+    flex-direction: column;
+  }
+}
+
+/* ---------- Navigation, introduction, bouton ---------- */
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+}
+
+header nav a {
+  font-weight: 700;
+  color: var(--turquoise);
+  text-decoration: none;
+}
+
+header nav a:hover {
+  color: var(--jaune);
+  background: none;
+}
+
+.intro {
+  font-size: 1.15rem;
+  margin-bottom: 1.5rem;
+}
+
+a.bouton {
+  display: inline-block;
+  margin-top: 1rem;
+  padding: 0.7rem 1.4rem;
+  font-family: var(--police);
+  font-style: italic;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  color: var(--nuit);
+  background: linear-gradient(90deg, var(--jaune), var(--orange), var(--rose));
+  border-radius: 999px;
+  box-shadow: 0 4px 0 var(--violet);
+}
+
+a.bouton:hover {
+  color: var(--nuit);
+  background: linear-gradient(90deg, var(--jaune), var(--orange), var(--rose));
+  transform: translateY(-2px);
 }

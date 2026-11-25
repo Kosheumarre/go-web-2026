@@ -1,0 +1,27 @@
+{{/* templates/jeu.html */}}
+{{template "header" .}}
+<h1>{{.Game.Name}}</h1>
+<p>Sorti en {{.Game.Year}} par {{.Game.Studio}}</p>
+
+<ul class="genres">
+  {{range .Game.Genres}}
+    <li>{{.}}</li>
+  {{end}}
+</ul>
+
+<h2>Tournois</h2>
+{{if .Tournaments}}
+<ul class="tournois">
+  {{range .Tournaments}}
+    <li>
+      <strong>{{.Name}}</strong>
+      <span class="lieu">{{.City}} · {{.Date}}</span>
+    </li>
+  {{end}}
+</ul>
+{{else}}
+  <p>Aucun tournoi prévu</p>
+{{end}}
+
+<p class="retour"><a href="/jeux">← Retour à la liste</a></p>
+{{template "footer" .}}

@@ -1,0 +1,19 @@
+{{/* templates/accueil.html */}}
+{{template "header" .}}
+<h1>Bienvenue sur GameDex</h1>
+<p class="intro">Le catalogue des jeux vidéo et de leurs tournois. Cherche un jeu, ouvre sa fiche et retrouve ses tournois.</p>
+
+<form class="recherche" action="/jeux" method="get">
+  <input type="search" name="q" placeholder="Rechercher un jeu">
+  <button type="submit">Chercher</button>
+</form>
+
+<h2>À la une</h2>
+<ul class="jeux">
+  {{range .Games}}
+    <li><a href="/jeux/{{.ID}}">{{.Name}}</a> <span class="annee">{{.Year}}</span></li>
+  {{end}}
+</ul>
+
+<p><a class="bouton" href="/jeux">Voir tous les jeux</a></p>
+{{template "footer" .}}

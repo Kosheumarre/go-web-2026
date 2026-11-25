@@ -18,13 +18,12 @@ type Game struct {
 	Studio string   `json:"studio"`
 	Genres []string `json:"genres"`
 }
-
-// À compléter avec les autres clés du JSON (ville, date...) :
-// regarde http://localhost:8081/api/tournaments dans ton navigateur.
 type Tournament struct {
 	ID     int    `json:"id"`
 	GameID int    `json:"gameId"`
 	Name   string `json:"name"`
+	City   string `json:"city"`
+	Date   string `json:"date"`
 }
 
 func fetchJSON(path string, dest any) error {

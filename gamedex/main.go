@@ -1,12 +1,37 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 )
+
+var tmpl = template.Must(template.ParseGlob("templates/*.html"))
+
+type PageListe struct {
+	Games []Game
+	Query string
+}
+
+type PageJeu struct {
+	Game        Game
+	Tournaments []Tournament
+}
+
+type PageAccueil struct {
+	Games []Game
+}
+
+type PageErreur struct {
+	Code    int
+	Titre   string
+	Message string
+}
 
 func main() {
 	port := flag.String("port", "8080", "port d'écoute de GameDex")
@@ -21,6 +46,7 @@ func main() {
 	mux.HandleFunc("GET /jeux", listeJeux)
 	mux.HandleFunc("GET /jeux/{id}", detailJeu)
 	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+	mux.HandleFunc("/", introuvable)
 
 	log.Printf("GameDex sur http://localhost:%s", *port)
 	log.Fatal(http.ListenAndServe(":"+*port, mux))
@@ -47,89 +73,105 @@ func afficherJeux() error {
 	return nil
 }
 
-func accueil(w http.ResponseWriter, _ *http.Request) {
+func render(w http.ResponseWriter, status int, name string, data any) {
+	var buf bytes.Buffer
+	if err := tmpl.ExecuteTemplate(&buf, name, data); err != nil {
+		log.Printf("template %s : %v", name, err)
+		http.Error(w, "Erreur interne", http.StatusInternalServerError)
+		return
+	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	fmt.Fprint(w, `<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="utf-8">
-  <title>GameDex</title>
-  <link rel="stylesheet" href="/static/css/style.css">
-</head>
-<body>
-  <h1>Bienvenue sur GameDex</h1>
-  <p>Choisis une route à tester :</p>
-  <ul class="menu">
-    <li>
-      <a href="/jeux">
-        <span class="titre">Liste des jeux</span>
-        <span class="route">GET /jeux</span>
-        <span class="code ok">200</span>
-      </a>
-    </li>
-    <li>
-      <a href="/jeux/1">
-        <span class="titre">Détail d'un jeu</span>
-        <span class="route">GET /jeux/1</span>
-        <span class="code ok">200</span>
-      </a>
-    </li>
-    <li>
-      <a href="/jeux/abc">
-        <span class="titre">Identifiant invalide</span>
-        <span class="route">GET /jeux/abc</span>
-        <span class="code erreur">400</span>
-      </a>
-    </li>
-    <li>
-      <a href="/jeux/999">
-        <span class="titre">Jeu introuvable</span>
-        <span class="route">GET /jeux/999</span>
-        <span class="code erreur">404</span>
-      </a>
-    </li>
-    <li>
-      <a href="/static/css/style.css">
-        <span class="titre">Fichier statique</span>
-        <span class="route">GET /static/css/style.css</span>
-        <span class="code ok">200</span>
-      </a>
-    </li>
-  </ul>
-</body>
-</html>`)
+	w.WriteHeader(status)
+	buf.WriteTo(w)
 }
 
-func listeJeux(w http.ResponseWriter, _ *http.Request) {
+func renderErreur(w http.ResponseWriter, code int, titre, message string) {
+	render(w, code, "erreur.html", PageErreur{Code: code, Titre: titre, Message: message})
+}
+
+func erreurAPI(w http.ResponseWriter) {
+	renderErreur(w, http.StatusServiceUnavailable, "Service indisponible",
+		"Impossible de joindre la mini API. Réessayez dans un instant.")
+}
+
+func introuvable(w http.ResponseWriter, _ *http.Request) {
+	renderErreur(w, http.StatusNotFound, "Page introuvable", "Cette adresse n'existe pas sur GameDex.")
+}
+
+func accueil(w http.ResponseWriter, _ *http.Request) {
 	games, err := FetchGames()
 	if err != nil {
 		log.Printf("FetchGames : %v", err)
-		http.Error(w, "Service indisponible, réessayez plus tard.", http.StatusServiceUnavailable)
+		erreurAPI(w)
 		return
 	}
-	for _, g := range games {
-		fmt.Fprintf(w, "%d. %s (%d)\n", g.ID, g.Name, g.Year)
+
+	games = games[:min(4, len(games))]
+	render(w, http.StatusOK, "accueil.html", PageAccueil{Games: games})
+}
+
+func listeJeux(w http.ResponseWriter, r *http.Request) {
+	games, err := FetchGames()
+	if err != nil {
+		log.Printf("FetchGames : %v", err)
+		erreurAPI(w)
+		return
 	}
+
+	q := r.URL.Query().Get("q")
+	if q != "" {
+		filtres := []Game{}
+		for _, g := range games {
+			if strings.Contains(strings.ToLower(g.Name), strings.ToLower(q)) {
+				filtres = append(filtres, g)
+			}
+		}
+		games = filtres
+	}
+
+	render(w, http.StatusOK, "liste.html", PageListe{Games: games, Query: q})
 }
 
 func detailJeu(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
-		http.Error(w, "l'identifiant doit être un nombre", http.StatusBadRequest)
+		renderErreur(w, http.StatusBadRequest, "Requête invalide", "L'identifiant d'un jeu doit être un nombre.")
 		return
 	}
 
 	games, err := FetchGames()
 	if err != nil {
 		log.Printf("FetchGames : %v", err)
-		http.Error(w, "Service indisponible, réessayez plus tard.", http.StatusServiceUnavailable)
+		erreurAPI(w)
 		return
 	}
+
+	var jeu Game
+	trouve := false
 	for _, g := range games {
 		if g.ID == id {
-			fmt.Fprintf(w, "%s (%d), studio %s\n", g.Name, g.Year, g.Studio)
-			return
+			jeu = g
+			trouve = true
+			break
 		}
 	}
-	http.Error(w, "jeu introuvable", http.StatusNotFound)
+	if !trouve {
+		renderErreur(w, http.StatusNotFound, "Jeu introuvable", "Aucun jeu ne correspond à cet identifiant.")
+		return
+	}
+
+	tournaments, err := FetchTournaments()
+	if err != nil {
+		log.Printf("FetchTournaments : %v", err)
+		erreurAPI(w)
+		return
+	}
+	duJeu := []Tournament{}
+	for _, t := range tournaments {
+		if t.GameID == id {
+			duJeu = append(duJeu, t)
+		}
+	}
+
+	render(w, http.StatusOK, "jeu.html", PageJeu{Game: jeu, Tournaments: duJeu})
 }
