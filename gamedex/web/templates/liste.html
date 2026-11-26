@@ -3,7 +3,13 @@
 
 <form class="recherche" action="/jeux" method="get">
   <input type="search" name="q" value="{{.Query}}" placeholder="Rechercher un jeu">
-  <button type="submit">Chercher</button>
+  <select name="genre">
+    <option value="">Tous les genres</option>
+    {{range .Genres}}
+      <option value="{{.}}" {{if eq . $.Genre}}selected{{end}}>{{.}}</option>
+    {{end}}
+  </select>
+  <button type="submit">Filtrer</button>
 </form>
 
 {{if .Query}}
@@ -13,7 +19,13 @@
 {{if .Games}}
 <ul class="jeux">
   {{range .Games}}
-    <li><a href="/jeux/{{.ID}}">{{.Name}}</a> <span class="annee">{{.Year}}</span></li>
+    <li>
+      <a href="/jeux/{{.ID}}">{{.Name}}</a>
+      <span class="meta">
+        <span class="likes">♥ {{index $.Likes .ID}}</span>
+        <span class="annee">{{.Year}}</span>
+      </span>
+    </li>
   {{end}}
 </ul>
 {{else}}

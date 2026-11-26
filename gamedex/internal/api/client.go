@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"time"
 )
-
 const DefaultURL = "http://localhost:8081/api"
 
 type Client struct {
@@ -41,6 +41,18 @@ func (c *Client) get(path string, dest any) error {
 func (c *Client) FetchGames() ([]Game, error) {
 	var games []Game
 	if err := c.get("/games", &games); err != nil {
+		return nil, err
+	}
+	return games, nil
+}
+
+func (c *Client) SearchGames(q, genre string) ([]Game, error) {
+	params := url.Values{}
+	params.Set("q", q)
+	params.Set("genre", genre)
+
+	var games []Game
+	if err := c.get("/games?"+params.Encode(), &games); err != nil {
 		return nil, err
 	}
 	return games, nil

@@ -7,10 +7,16 @@
   <button type="submit">Chercher</button>
 </form>
 
-<h2>À la une</h2>
+<h2>Jeux les plus likés</h2>
 <ul class="jeux">
   {{range .Games}}
-    <li><a href="/jeux/{{.ID}}">{{.Name}}</a> <span class="annee">{{.Year}}</span></li>
+    <li>
+      <a href="/jeux/{{.ID}}">{{.Name}}</a>
+      <span class="meta">
+        <span class="likes">♥ {{index $.Likes .ID}}</span>
+        <span class="annee">{{.Year}}</span>
+      </span>
+    </li>
   {{end}}
 </ul>
 
